@@ -1,0 +1,21 @@
+package de.netzebw.to;
+
+import de.netzebw.to.enums.InputChannel;
+import de.netzebw.to.enums.ReporterRole;
+import de.netzebw.to.enums.ReporterType;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Data
+@RegisterForReflection
+public class ResponseTO {
+  
+  private String messageID;
+
+}

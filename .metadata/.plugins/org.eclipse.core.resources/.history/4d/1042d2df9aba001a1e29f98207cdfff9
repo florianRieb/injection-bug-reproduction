@@ -1,0 +1,172 @@
+package de.netzebw.util;
+
+import static java.time.LocalDateTime.parse;
+import static java.time.ZoneId.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+
+import lombok.experimental.UtilityClass;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
+/**
+ * The Class AttributeUtils.
+ *
+ * @author Jochen Mink, CGI
+ * @version 1.0.0
+ * @since
+ */
+@UtilityClass
+public class AttributeUtils {
+
+  public static final Map<String, AttributeValue> ATTRIBUTE_MAP = new HashMap<>();
+
+  private static final String NULL_STRING = "null";
+
+  public static LocalDateTime toLocalDateTime(final String localDateTimeSt) {
+    try {
+      return parse(localDateTimeSt);
+    } catch (final DateTimeParseException | NullPointerException ex) {
+      return null;
+    }
+  }
+
+  public static ZoneId toZoneId(final String zoneIdSt) {
+    try {
+      return of(zoneIdSt);
+    } catch (final DateTimeException | NullPointerException ex) {
+      return null;
+    }
+  }
+
+  public static String fromZoneId(final ZoneId zoneId) {
+    return null == zoneId || null == zoneId.getId()
+        ? null
+        : zoneId.getId();
+  }
+
+  public static String toNonNullableString(final Object obj) {
+    return Objects.toString(obj, NULL_STRING);
+  }
+
+  public static String fromNonNullableString(final String st) {
+    return StringUtils.equals(NULL_STRING, st)
+        ? null
+        : st;
+  }
+
+  public static String toSafeNullableString(final Object obj) {
+    return fromNonNullableString(toNonNullableString(obj));
+  }
+
+  public static <T> T getAttributeValue(final Map<String, AttributeValue> item, final String key, final Class<T> clazz) {
+    return getAttributeValue(item, key, clazz, null);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T getAttributeValue(final Map<String, AttributeValue> item, final String key, final Class<T> clazz, final T defaultValue) {
+    final AttributeValue attrVal = get(item, key);
+    if (null == attrVal || null == clazz) {
+      return null;
+    }
+    if (clazz.isAssignableFrom(String.class)) {
+      return (T) toNonNullableString(attrVal.s());
+    } else if (clazz.isAssignableFrom(Map.class)) {
+      return (T) attrVal.m();
+    }
+    return defaultValue;
+  }
+
+  /**
+   * Build {@link AttributeValue} for {@link String} fields of object T.
+   * 
+   * @param item
+   * @param getter
+   * @return
+   */
+  public static <T, R> AttributeValue buildStringAttributeValue(final T item, final Function<T, R> getter) {
+    Objects.requireNonNull(getter);
+    final R r = getter.apply(item);
+    final String str = toNonNullableString(r);
+    return str == null || str.isEmpty()
+        ? AttributeValue.builder().nul(true).build()
+        : AttributeValue.builder().s(str).build();
+  }
+
+  /**
+   * Build {@link AttributeValue} for {@link Boolean} fields of object T.
+   * 
+   * @param <T>
+   * @param item
+   * @param getter
+   * @return
+   */
+
+  public static <T> AttributeValue buildBooleanAttributeValue(final T item, final Function<T, Boolean> getter) {
+    Objects.requireNonNull(getter);
+    final Boolean bool = getter.apply(item);
+
+    return bool == null
+        ? AttributeValue.builder().nul(true).build()
+        : AttributeValue.builder().bool(bool).build();
+  }
+
+  /**
+   * Transform {@link Map}<{@link String}, {@link AttributeValue}> to AttributeValue of type Map.
+   * 
+   * @param attributeValueMap
+   * @return
+   */
+
+  public static AttributeValue buildMapAttributeValue(final Map<String, AttributeValue> attributeValueMap) {
+    Objects.requireNonNull(attributeValueMap);
+
+    return attributeValueMap == null
+        ? AttributeValue.builder().nul(true).build()
+        : AttributeValue.builder().m(attributeValueMap).build();
+  }
+
+  /**
+   * Convert string to boolean.
+   * 
+   * @param String
+   *               which should convert to boolean.
+   * @return Boolean, if input string is null or only contains blanks returns null.
+   */
+
+  public Boolean stringToBoolean(final String s) {
+    return s == null || s.isBlank()
+        ? null
+        : BooleanUtils.toBooleanObject(s);
+  }
+  
+  public Integer stringToInteger(final String s) {
+    return s == null || s.isBlank()
+        ? null:
+          NumberUtils.toInt(s);
+  }
+
+  public Short stringToShort(final String s) {
+    return s == null || s.isBlank()
+        ? null
+        : NumberUtils.toShort(s);
+  }
+
+  private static AttributeValue get(final Map<String, AttributeValue> item, final String key) {
+    return null == item || item.isEmpty() || isEmpty(key)
+        ? null
+        : item.get(key);
+  }
+
+}

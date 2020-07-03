@@ -1,0 +1,177 @@
+package de.netzebw;
+
+import static io.restassured.RestAssured.given;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.Response.Status.ACCEPTED;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.UNSUPPORTED_MEDIA_TYPE;
+import static org.hamcrest.CoreMatchers.any;
+import static org.hamcrest.CoreMatchers.containsStringIgnoringCase;
+
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+import de.netzebw.to.MessageTO;
+import de.netzebw.to.ReporterTO;
+import de.netzebw.to.enums.InputChannel;
+import de.netzebw.to.enums.ReporterRole;
+import de.netzebw.to.enums.ReporterType;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+@QuarkusTestResource(SnsResource.class)
+public class MessagePreperationIntegrationTest {
+
+  static final ObjectWriter REPORTER_WRITER = new ObjectMapper().writerFor(MessageTO.class);
+
+  private static final String VALID_TEST_MESSAGE_0 =
+      String.format("{\"anonymous\": %s, \"reporterType\":\"%s\", \"city\": \"%s\"}", "true", "CITIZEN", "Stuttgart");
+
+  private static final String POST_PATH = "/{resource}/message/gui";
+
+  @Test
+  public void publishMsgTest() {
+
+    final MessageTO validMessageTO = MessageTO.builder().anonymous(false).city("Stuttgart").cityDistrict("Fellbach")
+        .reporterType(ReporterType.COMPANY).reporterRole(ReporterRole.BUSINESSSALES).inputChannel(InputChannel.EMAIL)
+        .reportingTimestamp("2020-06-05T12:56:25.406").managedCustomer(true)
+        .reporter(
+            ReporterTO.builder().salutation("Herr").firstName("Hans").lastName("Im-Glück").email("hans.hlück@mail.com")
+                .company("Hans im Glück GmbH").city("Stuttgart").build())
+        .build();
+
+    given().pathParam("resource", "lightingservice")
+        .header(CONTENT_TYPE, APPLICATION_JSON)
+        .body(buildValidJsonString(validMessageTO))
+        .when()
+        .post(POST_PATH)
+        .then()
+        .statusCode(ACCEPTED.getStatusCode())
+        .body(any(String.class));
+  }
+
+  @Test
+  public void publishMsgTest2() {
+    given().pathParam("resource", "lightingservice")
+        .header(CONTENT_TYPE, APPLICATION_JSON)
+        .body(VALID_TEST_MESSAGE_0)
+        .when()
+        .post(POST_PATH)
+        .then()
+        .statusCode(ACCEPTED.getStatusCode())
+        .body(any(String.class));
+  }
+
+  @Test
+  public void publishWithoutContentType() {
+    given().pathParam("resource", "lightingservice")
+        .body(VALID_TEST_MESSAGE_0)
+        .when()
+        .post(POST_PATH)
+        .then()
+        .statusCode(UNSUPPORTED_MEDIA_TYPE.getStatusCode());
+  }
+
+  @Test
+  public void publishWithoutContentTest() {
+    given().pathParam("resource", "lightingservice")
+        .header(CONTENT_TYPE, APPLICATION_JSON)
+        .when()
+        .post(POST_PATH)
+        .then()
+        .statusCode(BAD_REQUEST.getStatusCode());
+  }
+
+  /**
+   * US-553458: Der Ort ist ein Pflichtfeld und muss enthalten sein.
+   */
+
+  @Test
+  public void publishWithNullCityTest() {
+    given().pathParam("resource", "lightingservice")
+        .header(CONTENT_TYPE, APPLICATION_JSON)
+        .body(buildInvalidJson(null))
+        .when()
+        .post(POST_PATH)
+        .then()
+        .statusCode(BAD_REQUEST.getStatusCode())
+        .body(containsStringIgnoringCase("must not be empty"));
+
+  }
+
+  @Test
+  public void publishWithEmptyCityTest() {
+    given().pathParam("resource", "lightingservice")
+        .header(CONTENT_TYPE, APPLICATION_JSON)
+        .body(buildInvalidJson(""))
+        .when()
+        .post(POST_PATH)
+        .then()
+        .statusCode(BAD_REQUEST.getStatusCode())
+        .body(containsStringIgnoringCase("must not be empty"));
+
+  }
+
+  @Test
+  public void publishWithValidCityTest() {
+    given().pathParam("resource", "lightingservice")
+        .header(CONTENT_TYPE, APPLICATION_JSON)
+        .body(buildInvalidJson("Stuttgart"))
+        .when()
+        .post(POST_PATH)
+        .then()
+        .statusCode(ACCEPTED.getStatusCode());
+
+  }
+
+  @Test
+  public void publisWithInvalidLightningNoTest() {
+    final MessageTO inValidMessageTO = MessageTO.builder().anonymous(false).city("Stuttgart").cityDistrict("Fellbach").lightingNo(100_000)
+        .reporterType(ReporterType.COMPANY).reporterRole(ReporterRole.BUSINESSSALES).inputChannel(InputChannel.EMAIL)
+        .reportingTimestamp("2020-06-05T12:56:25.406").managedCustomer(true)
+        .reporter(
+            ReporterTO.builder().salutation("Herr").firstName("Hans").lastName("Im-Glück").email("hans.hlück@mail.com")
+                .company("Hans im Glück GmbH").city("Stuttgart").build())
+        .build();
+    
+    given().pathParam("resource", "lightingservice")
+    .header(CONTENT_TYPE, APPLICATION_JSON)
+    .body(buildValidJsonString(inValidMessageTO))
+    .when()
+    .post(POST_PATH)
+    .then()
+    .statusCode(BAD_REQUEST.getStatusCode())
+    .body(containsStringIgnoringCase("[must be less than or equal to 99999]"));
+
+    
+    
+  }
+
+  private String buildInvalidJson(final String location) {
+
+    return null == location
+        ? "{}"
+        : String.format("{\"city\":\"%s\"}", location);
+
+  }
+
+  private String buildValidJsonString(final MessageTO message) {
+    if (message == null) {
+      return "";
+    }
+
+    try {
+
+      return REPORTER_WRITER.writeValueAsString(message);
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    return "{}";
+  }
+
+}

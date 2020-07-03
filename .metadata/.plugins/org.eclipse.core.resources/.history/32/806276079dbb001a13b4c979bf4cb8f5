@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+   title: Incident Service API
+   version: 0.0.1
+   description: 'Folgende API wird dazu verwendet um Störungen im #LightOn System zu bearbeiten.'
+   contact:
+      email: dienstleistung@netze-bw.de #LightOn System zu überführen.'
+      name: '#Dienstleistung'
+   license:
+      name: Netze-BW Lizenz
+      url: https://netze-bw.de
+servers:
+-  url: http://localhost:8080
+   description: Lokale Dev Umgebung
+-  url: https://lighton.netze-bw.de
+   description: Produktiv Umgebung
+-  url: https://test.lighton-netze-bw.de
+   description: Test Umgebung
+externalDocs:
+   description: Weitere Informationen zur Strassenbeleuchtung
+   url: https://myenbw.sharepoint.com/sites/DLBU1Straenbeleuchtung
+tags:
+-  name: Incident
+   description: Störung

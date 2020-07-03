@@ -1,0 +1,23 @@
+package de.netzebw.web;
+
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
+
+import lombok.RequiredArgsConstructor;
+
+@Path("/incidents")
+@RequiredArgsConstructor
+public class IncidentResource implements IncidentResourceDocu{
+  
+ 
+  @Path("/{id}")
+  @Override
+  public Response createOrUpdate() {
+    
+    return Response.noContent().status(200).build();
+  }
+  
+
+
+
+}

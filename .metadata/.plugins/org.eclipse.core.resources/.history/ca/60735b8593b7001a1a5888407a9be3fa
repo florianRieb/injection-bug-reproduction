@@ -1,0 +1,83 @@
+package de.netzebw.service;
+
+import java.util.Optional;
+
+import javax.enterprise.context.ApplicationScoped;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+import de.netzebw.to.MessageTO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.PublishResponse;
+
+/**
+ * The message service class which is responsible for serializing and publishing the message object {@link MessageTO}
+ * to the SNS service.
+ * 
+ * @author fri
+ *
+ */
+@Slf4j
+@ApplicationScoped
+@RequiredArgsConstructor
+public class MessageService {
+
+  private final SnsClient sns;
+
+  @ConfigProperty(name = "topic.arn")
+  protected String topicArn;
+
+  static final ObjectWriter REPORTER_WRITER =
+      new ObjectMapper()
+//      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).registerModule(new JavaTimeModule())
+      .writerFor(MessageTO.class);
+
+  /**
+   * Reads the given message object and try to push them into the
+   * SNS-topic.
+   * 
+   * @param message
+   *                {@link MessageTO}
+   * @return the SNS response wrapped in a {@link Optional}}
+   * 
+   * @exception software.amazon.awssdk.core.exception.SdkClientException
+   *                                                                      if the client can not reach the sns service
+   * @exception software.amazon.awssdk.core.exception.SdkServiceException
+   *                                                                      if service has some trouble or do not allowed any connection from this
+   *                                                                      client
+   */
+
+  public Optional<PublishResponse> publish(final MessageTO message) {
+    Optional<PublishResponse> responseOpt = Optional.empty();
+
+    final String messageJson = serializeReporterToJsonString(message);
+
+    if (messageJson == null) {
+      return responseOpt;
+    }
+
+    log.info("Try to publish: {}", messageJson);
+    final PublishResponse response = sns.publish(p -> p.topicArn(topicArn).message(messageJson));
+    responseOpt = Optional.ofNullable(response);
+    log.info("Successful published message with id: {}", response.messageId());
+
+    return responseOpt;
+  }
+
+  public String serializeReporterToJsonString(final MessageTO message) {
+    try {
+      return REPORTER_WRITER.writeValueAsString(message);
+    } catch (JsonProcessingException e) {
+      log.warn("Can not properly serialize the object to json string.", e);
+    }
+    return null;
+
+  }
+
+}

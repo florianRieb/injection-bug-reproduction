@@ -1,0 +1,67 @@
+package de.netzebw.lambda;
+
+import static java.lang.String.format;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.SNSEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.netzebw.service.MessageSyncService;
+import de.netzebw.to.OutputTO;
+import de.netzebw.util.to.Message;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * The Class MessageLambda.
+ *
+ * @author Jochen Mink, CGI
+ * @version 1.0.0
+ * @since
+ */
+@Slf4j
+@Named("msglambda")
+public class MessageLambda implements RequestHandler<SNSEvent, OutputTO> {
+  
+  @Inject
+  MessageSyncService service;
+  
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  @Override
+  public OutputTO handleRequest(final SNSEvent snsEvent, final Context context) {
+    log.info(format("SNSEvent=[%s]", snsEvent));
+    final String requestId = context.getAwsRequestId();
+    final OutputTO.OutputTOBuilder outputTOBuilder = OutputTO.builder().requestId(requestId);
+    if (null == snsEvent) {
+      return outputTOBuilder.build();
+    }
+    final AtomicInteger savedRecordsAR = new AtomicInteger();
+    snsEvent.getRecords().forEach(record -> {
+      if (null == record.getSNS()) {      
+        return;
+      }
+      final AtomicReference<Message> messageTOAR = new AtomicReference<>();
+      try {       
+        messageTOAR.set(OBJECT_MAPPER.readValue(record.getSNS().getMessage(), Message.class));
+        messageTOAR.get().setRequestId(requestId);
+        messageTOAR.get().setUuid(record.getSNS().getMessageId());
+              
+        service.add(messageTOAR.get());
+        savedRecordsAR.getAndIncrement();
+      } catch (final JsonProcessingException jpex) {
+        log.error(format("error processing JSON object=[%s]", jpex));
+        return;
+      }
+    });
+    return outputTOBuilder.result(savedRecordsAR.get()).build();
+  }
+
+}

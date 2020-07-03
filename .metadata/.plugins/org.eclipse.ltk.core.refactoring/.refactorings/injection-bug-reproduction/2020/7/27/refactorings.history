@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;de.fri.ExampleResource&apos; to &apos;MyResource&apos;&#x0A;- Original project: &apos;injection-bug-reproduction&apos;&#x0A;- Original element: &apos;de.fri.ExampleResource&apos;&#x0A;- Renamed element: &apos;de.fri.MyResource&apos;&#x0A;- Update references to refactored element&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;ExampleResource&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;de.fri{ExampleResource.java[ExampleResource" matchStrategy="1" name="MyResource" qualified="false" references="true" similarDeclarations="false" stamp="1593765044385" textual="false" version="1.0"/>
+</session>

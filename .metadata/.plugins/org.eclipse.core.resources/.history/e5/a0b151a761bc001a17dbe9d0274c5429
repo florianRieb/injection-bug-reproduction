@@ -1,0 +1,41 @@
+package de.netzebw.to;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * Object to parse some exception which will be pass to the user.
+ * 
+ * @author fri
+ *
+ */
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+@RegisterForReflection
+@Schema(description = "Error Objekt")
+public class ErrorTO {
+  
+  @Schema(description = "Fehlercode", required = true)
+  private int errorCode;
+  
+  @Schema(description = "Http Status Code", required = true)
+  private int httpStatusCode;
+  
+  @Schema(description = "Fehlermeldung", required = true)
+  private String errorMessage;
+  
+  @Schema(description = "ID des Aufrufers", required = false)
+  private String correlationId;
+
+}

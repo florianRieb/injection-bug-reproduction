@@ -1,0 +1,24 @@
+package de.netzebw.to;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@RegisterForReflection
+@Schema(description = "Störungsmeldung")
+public class IncidentTO {
+  
+  @Schema(description = "name", required = false)
+  public String name;
+  
+  ReporterTO reporter;
+
+}

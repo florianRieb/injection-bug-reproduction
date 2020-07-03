@@ -1,0 +1,6 @@
+package de.netzebw.entity;
+
+
+public class Incident {
+
+}

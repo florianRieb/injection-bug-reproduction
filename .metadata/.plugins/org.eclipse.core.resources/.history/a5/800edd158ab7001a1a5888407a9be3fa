@@ -1,0 +1,91 @@
+package de.netzebw.lambda;
+
+import static de.netzebw.lambda.MessageProcessingTestHelper.MESSAGE_TO_1;
+import static de.netzebw.lambda.MessageProcessingTestHelper.MESSAGE_TO_2;
+import static de.netzebw.lambda.MessageProcessingTestHelper.MESSAGE_TO_3;
+import static de.netzebw.lambda.MessageProcessingTestHelper.createTableIfNotExists;
+import static de.netzebw.lambda.MessageProcessingTestHelper.deleteTableIfExists;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.Collection;
+
+import javax.inject.Inject;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import de.netzebw.service.MessageSyncService;
+import de.netzebw.util.to.Message;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+/**
+ * The Class MessageSyncServiceTest.
+ *
+ * @author Jochen Mink, CGI
+ * @version 1.0.0
+ * @since
+ */
+@QuarkusTest
+@QuarkusTestResource(DynamoDBResource.class)
+public class MessageSyncServiceTest {
+
+  @Inject
+  MessageSyncService messageSyncService;
+
+  @Inject
+  DynamoDbClient dynamoDb;
+
+  /**
+   * performs test setup.
+   */
+  @BeforeEach
+  public void setup() {
+    createTableIfNotExists(dynamoDb);
+    messageSyncService.add(MESSAGE_TO_1);
+    assertEquals(1, messageSyncService.findAll().size());
+  }
+
+  /**
+   * performs tear down after test.
+   */
+  @AfterEach
+  public void tearDown() {
+    deleteTableIfExists(dynamoDb);
+  }
+
+  @Test
+  public void testFindAll() {
+    assertEquals(1, messageSyncService.findAll().size());
+    assertEquals(2, messageSyncService.findAll().size()); 
+    assertEquals(3, messageSyncService.findAll().size());
+  }
+
+
+
+  @Test
+  public void testGetByUuid() {
+    final Collection<Message> allItems = messageSyncService.findAll();
+    assertNotNull(allItems);
+    final String existingUuid = allItems.stream().map(Message::getUuid).findFirst().orElse(null);
+    assertNotNull(existingUuid);
+    final Message foundMsg = messageSyncService.get(existingUuid);
+    assertNotNull(foundMsg);
+    assertEquals(MESSAGE_TO_1.getStreet(), foundMsg.getStreet());
+  }
+
+  @Test
+  public void testGetByFunctionalId() {
+    final Collection<Message> allItems = messageSyncService.findAll();
+    assertNotNull(allItems);
+    final String existingFunctionalId = allItems.stream().map(Message::getFunctionalId).findFirst().orElse(null);
+    assertNotNull(existingFunctionalId);
+    final Message foundMsg = messageSyncService.getByFunctionalId(existingFunctionalId);
+    assertNotNull(foundMsg);
+    assertEquals(MESSAGE_TO_1.getUuid(), foundMsg.getUuid());
+  }
+
+}

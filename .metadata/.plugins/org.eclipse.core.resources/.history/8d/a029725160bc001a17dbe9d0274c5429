@@ -1,0 +1,13 @@
+package de.netzebw.data;
+
+import javax.enterprise.context.ApplicationScoped;
+
+import de.netzebw.data.entity.Incident;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
+@ApplicationScoped
+public class IncidentRepositry implements PanacheRepository<Incident>{
+  
+  
+
+}

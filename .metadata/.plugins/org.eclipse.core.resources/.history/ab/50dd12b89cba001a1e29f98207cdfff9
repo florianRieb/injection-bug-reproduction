@@ -1,0 +1,56 @@
+package de.netzebw;
+
+import javax.inject.Inject;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import de.netzebw.service.MessageService;
+import de.netzebw.to.MessageTO;
+import de.netzebw.to.ReporterTO;
+import de.netzebw.to.enums.InputChannel;
+import de.netzebw.to.enums.ReporterRole;
+import de.netzebw.to.enums.ReporterType;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+public class MessageServiceTest {
+  
+  private static final String MSG_JSON_STRING_0 = String.format("{\"anonymous\": %s,\"reporterType\": \"%s\"}", "true", "CITIZEN");
+  private static final MessageTO MSG_OBJ_0 = MessageTO.builder().anonymous(true).reporterType(ReporterType.CITIZEN).build();
+
+  private static final String MSG_JSON_STRING_1 = String.format("{\"anonymous\": %s,\"reporterType\": \"%s\",\"reporterRole\":\"%s\","
+      + "\"lightingNo\": %s, \"inputChannel\":\"%s\",\"reportingTimestamp\":\"%s\",\"zoneId\":\"%s\","
+      + "\"reporter\":{\"firstName\":\"first\",\"lastName\":\"last\",\"email\":\"test@mail\",\"phoneNo0\":\"012345\"}}",
+      "true", "CITIZEN", "MAJOR", "117", "KOK", "2020-06-05T12:56:25.406", "Z");
+
+  private static final MessageTO MSG_OBJ_1 =
+      MessageTO.builder().anonymous(true).reporterType(ReporterType.CITIZEN).reporterRole(ReporterRole.MAJOR).lightingNo(11799).inputChannel(InputChannel.KOK)
+          .reportingTimestamp("2020-06-05T12:56:25.406").zoneId("Z")
+          .reporter(ReporterTO.builder().firstName("first").lastName("last").email("test@mail").phoneNo0("012345").build()).build();
+  
+  private static final String MSG_JSON_STRING_2 = String.format("{\"reportingTimestamp\": \"%s\"}", "2020-06-05T12:56:25" );
+  private static final MessageTO MSG_OBJ_2 = MessageTO.builder().reportingTimestamp("2020-06-05T12:56:25").build();
+
+  @Inject
+  MessageService msgService;
+
+  @Test
+  public void serializeValidObject0Test() {
+    final String jsonString = msgService.serializeReporterToJsonString(MSG_OBJ_0);
+    Assertions.assertEquals(MSG_JSON_STRING_0.replaceAll("\\s+", ""), jsonString);
+  }
+
+  @Test
+  public void serializeValidObject1Test() {
+    final String jsonString = msgService.serializeReporterToJsonString(MSG_OBJ_1);
+    Assertions.assertEquals(MSG_JSON_STRING_1.replaceAll("\\s+", ""), jsonString);
+  }
+  
+  @Test
+  public void serializeValidObject2Test_without_ms() {
+    final String jsonString = msgService.serializeReporterToJsonString(MSG_OBJ_2);
+    Assertions.assertEquals(MSG_JSON_STRING_2.replaceAll("\\s+", ""), jsonString);
+  }
+  
+}

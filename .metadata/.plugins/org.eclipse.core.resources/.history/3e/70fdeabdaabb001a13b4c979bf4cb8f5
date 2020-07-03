@@ -1,0 +1,27 @@
+package de.netzebw.util.to.enums;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * The Enum InputChannel.
+ *
+ * @author Florian, Riebandt, CGI
+ * @version 0.0.1
+ * @since
+ */
+@RequiredArgsConstructor
+public enum InputChannel {
+
+  CENTRAL_OFFICE("Leitstelle"),
+  KOK("KOK"),
+  FAX("Fax"),
+  PHONE("Telefon"),
+  EMAIL("Mail"),
+  STOERUNG24("Störung24"),
+  INTERNAL("Intern"),
+  OTHER("Sonstige");
+
+  @Getter
+  private final String germanName;
+}

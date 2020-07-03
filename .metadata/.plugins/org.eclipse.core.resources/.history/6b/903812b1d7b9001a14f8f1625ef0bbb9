@@ -1,0 +1,24 @@
+package de.netzebw;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import de.netzebw.util.AttributeUtils;
+import de.netzebw.util.to.Message;
+import io.quarkus.test.junit.QuarkusTest;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
+@QuarkusTest
+public class AttributeUtilsTest {
+
+  @Test
+  public void buildMessageStringAttributeValueTest() {
+
+    Message item = Message.builder().uuid("huildsadsjka").city("Rottenburg").functionalId("00000001").build();
+    AttributeValue value = AttributeUtils.buildStringAttributeValue(item, Message::getCity);
+
+    Assertions.assertEquals(AttributeValue.builder().s("Rottenburg").build(), value);
+
+  }
+
+}

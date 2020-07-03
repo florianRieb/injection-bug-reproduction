@@ -1,0 +1,42 @@
+package de.netzebw.web;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+
+/**
+ * This class contains all relevant informations for the oas3 documentation of {@link IncidentResource}
+ */
+
+
+import de.netzebw.to.IncidentTO;
+
+
+@Consumes(APPLICATION_JSON)
+@Produces(APPLICATION_JSON)
+public interface IncidentResourceDocu {
+
+  @PUT
+  @APIResponses({
+          @APIResponse(
+              responseCode = "200",
+              content = @Content(
+                  schema = @Schema(
+                      type = SchemaType.OBJECT,
+                      implementation = IncidentTO.class,
+                      description = "Erstellen oder Aktualisieren einer Störung"))), // wurde erfolgreich aktualisiert inkl content
+          @APIResponse(responseCode = "201"), // wurde erfolgreich angelegt
+          @APIResponse(responseCode = "204"), // wurde erfolgreich aktualisiert ohne content
+          @APIResponse(responseCode = "400") }) // Bad Request
+  public void createOrUpdate();
+
+}

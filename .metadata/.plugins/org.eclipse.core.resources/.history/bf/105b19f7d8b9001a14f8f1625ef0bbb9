@@ -1,0 +1,108 @@
+package de.netzebw.util;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+
+import de.netzebw.util.entity.StaticMessageTable;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+
+public abstract class AbstractMessageService {
+
+  public String getTableName() {
+    return StaticMessageTable.MESSAGE_TABLE_NAME;
+  }
+
+  /**
+   * provides the {@link ScanRequest} for finding all objects which contains all given attributes.
+   * Checks if desiredAttributes contains in ALL_DB_ATTRIBUTES
+   * 
+   * @param desiredAttributes
+   *                          {@link String[]}
+   * @return the {@link ScanRequest}.
+   */
+  protected ScanRequest scanRequest(final String[] desiredAttributes) {
+    final String[] requestAttributes = null != desiredAttributes && desiredAttributes.length > 0
+        ? Arrays.asList(desiredAttributes).stream().filter( Arrays.asList(StaticMessageTable.ALL_DB_ATTRIBUTES)::contains)
+            .toArray(String[]::new)
+        : StaticMessageTable.ALL_DB_ATTRIBUTES;
+
+    return ScanRequest.builder().tableName(getTableName())
+        .attributesToGet(requestAttributes)
+        .build();
+  }
+
+  /**
+   * provides the {@link ScanRequest} for finding all objects with all attributes of {@link MessageTable} .
+   * 
+   * @return the {@link ScanRequest}.
+   */
+  protected ScanRequest scanRequest() {
+    return ScanRequest.builder().tableName(getTableName())
+        .attributesToGet(StaticMessageTable.ALL_DB_ATTRIBUTES)
+        .build();
+  }
+
+  /**
+   * provides the {@link ScanRequest} for finding all objects for the given functional id.
+   * 
+   * @param functionalId
+   *                     the functional id to scan for.
+   * @return the {@link ScanRequest} for finding all objects for the given functional id if present, else
+   *         {@link AbstractMessageService#scanRequest()}.
+   */
+  protected ScanRequest scanRequest(final String functionalId) {
+    return null == functionalId
+        ? scanRequest()
+        : ScanRequest.builder().tableName(getTableName())
+            .projectionExpression(asList(StaticMessageTable.ALL_DB_ATTRIBUTES).stream()
+                .collect(joining(StaticMessageTable.ATTRIBUTE_JOINER)))
+            .filterExpression(
+                format("%s = %s", StaticMessageTable.MSG_FUNCTIONAL_ID_COL, StaticMessageTable.FUNCTIONAL_ID_PARAM))
+            .expressionAttributeValues(
+                newHashMap(of(StaticMessageTable.FUNCTIONAL_ID_PARAM, AttributeValue.builder().s(functionalId).build())))
+            .build();
+  }
+
+  /**
+   * provides the {@link GetItemRequest} for finding an object based on its uuid.
+   * 
+   * @param uuid
+   *             the uuid as {@link String}.
+   * @return the {@link GetItemRequest}.
+   */
+  protected GetItemRequest buildGetRequest(final String uuid) {
+    return GetItemRequest.builder()
+        .tableName(getTableName())
+        .key(newHashMap(of(StaticMessageTable.MSG_UUID_COL, AttributeValue.builder().s(uuid).build())))
+        .attributesToGet(StaticMessageTable.ALL_DB_ATTRIBUTES)
+        .build();
+  }
+
+  /**
+   * provides the {@link PutItemRequest} for save or updating an object.
+   * 
+   * @param item
+   *             as Map<String, AttributeValue>
+   * 
+   * @return the {@link PutItemRequest}.
+   */
+  protected PutItemRequest buildPutRequest(final Map<String, AttributeValue> item) {
+    Objects.requireNonNull(item);
+    return PutItemRequest.builder()
+        .tableName(getTableName())
+        .item(item)
+        .build();
+
+  }
+
+}

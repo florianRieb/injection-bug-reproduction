@@ -1,0 +1,6 @@
+package de.netzebw.service;
+
+
+public class IncidentService {
+
+}

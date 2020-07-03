@@ -1,0 +1,16 @@
+package de.netzebw.web;
+
+import javax.ws.rs.core.Response;
+
+import lombok.RequiredArgsConstructor;
+
+
+@RequiredArgsConstructor
+public class IncidentResource implements IncidentResourceDocu{
+
+  
+  public Response createOrUpdate() {
+    return Response.ok().entity("OK Object").build();
+  }
+
+}

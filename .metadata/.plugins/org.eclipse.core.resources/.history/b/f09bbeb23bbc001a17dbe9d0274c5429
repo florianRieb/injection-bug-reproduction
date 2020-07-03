@@ -1,0 +1,121 @@
+package de.netzebw.to;
+
+import java.util.Collection;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import de.netzebw.to.enums.InputChannel;
+import de.netzebw.to.enums.ReporterRole;
+import de.netzebw.to.enums.ReporterType;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@RegisterForReflection
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+@Schema(description = "Störungsmeldung")
+public class IncidentTO {
+  
+  // Störungs spezifisch
+  
+  private String prority;
+  
+  private String failureClassification;
+  
+  private String failureType;
+  
+  // von Medlung übernommen
+  
+  
+  /**kann nur ausgelesen werden */
+  @Size(max = 36)
+  @Schema(description = "Version 4 UUID für die Störung", example = "d01efa32-4aea-4ef6-bcc7-a5dd1b079e50")
+  private String uuid;
+
+  @Size(max = 8)
+  @Schema(description = "Funktionale ID", example = "12345678")
+  private String functionalId;
+
+  @Schema(description = "Zeitstempel der Erfassung", example = "2020-06-05T12:56:25.406")
+  private String reportingTimestamp;
+
+  @NotEmpty
+  @Size(max = 50)
+  @Schema(description = "Ort der Störungsmeldung", example = "Stuttgart",required = true)
+  private String city;
+  
+  @Size(max = 50)
+  @Schema(description = "Teilort der Störungsmeldung", example = "Stuttgart-Möhringen", required = false)
+  private String cityDistrict;
+
+  @Schema(description = "Melder ist anonym", required = false)
+  private Boolean anonymous;
+
+  @Schema(description = "Melder Kategorie", required = false)
+  private ReporterType reporterType;
+
+  @Schema(description = "Melder Rolle", required = false)
+  private ReporterRole reporterRole;
+
+  @Size(max = 50)
+  @Schema(description = "Melder Rolle sonstiges", required = false)
+  private String reporterRoleOther;
+
+  @Size(max = 50)
+  @Schema(description = "Straße der Störungsmeldung", required = false)
+  private String street;
+
+  @Size(max = 5)
+  @Schema(description = "PLZ der Störungsmeldung", required = false)
+  private String zipCode;
+
+  @Size(max = 5)
+  @Schema(description = "HausNr der Störungsmeldung", required = false)
+  private String houseNo;
+
+  @Schema(description = "LeuchtstellenNr", required = false)
+  private Integer lightingNo;
+
+  @Schema(
+      description = "Eingangskanal",
+      required = false)
+  private InputChannel inputChannel;
+
+  @Size(max = 50)
+  @Schema(description = "Zeitzonen Id nach ISO-8601", required = false, example = "Europe/Berlin")
+  private String zoneId;
+
+  @Size(max = 500)
+  @Schema(description = "Anmerkungen zur Störungsmeldung  ", required = false)
+  private String description;
+
+  @Schema(description = "Melder ist Betriebskunde", required = false)
+  private Boolean managedCustomer;
+
+  @Size(max = 50)
+  @Schema(description = "externe Id", required = false)
+  private String externalId;
+
+  @Size(max = 50)
+  @Schema(description = "Request Id", required = false)
+  private String requestId;
+  
+  private ReporterTO reporter;
+  
+  private Collection<String> messageIds;
+  
+
+}

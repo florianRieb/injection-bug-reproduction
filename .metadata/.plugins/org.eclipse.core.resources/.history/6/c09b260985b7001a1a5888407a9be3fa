@@ -1,0 +1,157 @@
+package de.netzebw.lambda;
+
+import static com.google.common.collect.ImmutableSet.of;
+import static de.netzebw.lambda.MessageProcessingTestHelper.MESSAGE_TO_1;
+import static de.netzebw.lambda.MessageProcessingTestHelper.MESSAGE_TO_2;
+import static de.netzebw.lambda.MessageProcessingTestHelper.MESSAGE_TO_3;
+import static de.netzebw.lambda.MessageProcessingTestHelper.createTableIfNotExists;
+import static de.netzebw.lambda.MessageProcessingTestHelper.deleteTableIfExists;
+import static io.quarkus.amazon.lambda.test.LambdaClient.invoke;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Collection;
+import java.util.UUID;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.amazonaws.services.lambda.runtime.events.SNSEvent;
+import com.amazonaws.services.lambda.runtime.events.SNSEvent.SNS;
+import com.amazonaws.services.lambda.runtime.events.SNSEvent.SNSRecord;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.netzebw.service.MessageSyncService;
+import de.netzebw.to.OutputTO;
+import de.netzebw.util.to.Message;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+/**
+ * The Class MessageProcessingLambdaIntegrationTest.
+ *
+ * @author Jochen Mink, CGI
+ * @version 1.0.0
+ * @since
+ */
+@Slf4j
+@QuarkusTest
+@RequiredArgsConstructor
+@QuarkusTestResource(DynamoDBResource.class)
+public class MessageProcessingLambdaIntegrationTest {
+
+  private final MessageSyncService msgSyncService;
+
+  private final DynamoDbClient dynamoDb;
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  /**
+   * performs test setup.
+   */
+  @BeforeEach
+  public void setup() {
+    createTableIfNotExists(dynamoDb);
+  }
+
+  /**
+   * performs tear down after test.
+   */
+  @AfterEach
+  public void tearDown() {
+    deleteTableIfExists(dynamoDb);
+  }
+
+  @Test
+  public void testSimpleLambdaSuccessOneObject() {
+    final OutputTO result = invoke(OutputTO.class, buildSnsEvent(MESSAGE_TO_1));
+    final int noOfExpectedValidObjects = 1;
+    assertEquals(noOfExpectedValidObjects, result.getResult());
+    assertMatchingRequestId(result.getRequestId());
+    final Collection<Message> savedMsgs = assertNumberOfSavedRecords(noOfExpectedValidObjects);
+    assertTrue(savedMsgs.stream().map(Message::getCityDistrict).anyMatch(MESSAGE_TO_1.getCityDistrict()::equals));
+  }
+
+  @Test
+  public void testSimpleLambdaSuccessMultipleObjects() {
+    final OutputTO result = invoke(OutputTO.class, buildSnsEvent(MESSAGE_TO_1, MESSAGE_TO_2));
+    final int noOfExpectedValidObjects = 2;
+    log.info("TEST: getResult {}", result.getResult());
+    assertMatchingRequestId(result.getRequestId());
+    assertEquals(noOfExpectedValidObjects, result.getResult());
+    
+    final Collection<Message> savedMsgs = assertNumberOfSavedRecords(noOfExpectedValidObjects);
+    assertTrue(of(MESSAGE_TO_1.getLightingNo(), MESSAGE_TO_2.getLightingNo())
+        .containsAll(savedMsgs.stream().map(Message::getLightingNo).collect(toSet())));
+    log.info("FRI result {}", result.getResult().toString());
+  
+    
+  }
+
+  @Test
+  public void testSimpleLambdaData() {
+    final OutputTO result = invoke(OutputTO.class, buildSnsEvent(MESSAGE_TO_3));
+    final int noOfExpectedValidObjects = 1;
+    assertEquals(noOfExpectedValidObjects, result.getResult());
+    assertMatchingRequestId(result.getRequestId());
+    final Collection<Message> savedMsgs = assertNumberOfSavedRecords(noOfExpectedValidObjects);
+    assertTrue(savedMsgs.stream().map(Message::getLightingNo).anyMatch(MESSAGE_TO_3.getLightingNo()::equals));
+    final Message savedMsg = savedMsgs.stream().findFirst().orElse(null);
+    assertNotNull(savedMsg);
+    assertNull(savedMsg.getInputChannel());
+    assertNull(savedMsg.getReporter());
+    assertEquals(MESSAGE_TO_3.getDescription(), savedMsg.getDescription());
+  }
+
+  private Collection<Message> assertNumberOfSavedRecords(final int noOfExpectedValidObjects) {
+    final Collection<Message> savedMsgs = msgSyncService.findAll();
+    log.info("TEST saved Msgs size {}", savedMsgs.size() );
+    assertEquals(noOfExpectedValidObjects, savedMsgs.size());
+    return savedMsgs;
+  }
+
+  private void assertMatchingRequestId(final String requestId) {
+    assertNotNull(requestId);
+    assertTrue(requestId.matches("aws-request-\\d"), "Expected requestId as 'aws-request-<number>'");
+  }
+
+  private SNSEvent buildSnsEvent(final Message... messages) {
+    if (isEmpty(messages)) {
+      log.info("TEST buildSnsEvent Message ist NULL!");
+      return null;
+    }
+    final SNSEvent snsEvent = new SNSEvent();
+    snsEvent.setRecords(asList(messages).stream().map(this::fromMessage).collect(toList()));
+    log.info("TEST buildSnsEvent count record {}",snsEvent.getRecords().size() );
+    return snsEvent;
+  }
+
+  private SNSRecord fromMessage(final Message message) {
+    if (null == message) {
+      return null;
+    }
+    final SNS sns = new SNS();
+    final SNSRecord snsRecord = new SNSRecord();
+    sns.setMessageId(UUID.randomUUID().toString());
+    try { 
+      sns.setMessage(OBJECT_MAPPER.writeValueAsString(message));
+    } catch (final JsonProcessingException jpex) {
+      log.error(format("error serializing messageTO=[%s]", message));
+    }
+    snsRecord.setSns(sns);
+    return snsRecord;
+  }
+
+}

@@ -1,0 +1,24 @@
+package de.netzebw.util.to.enums;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * The Enum ReporterType.
+ *
+ * @author Florian, Riebandt, CGI
+ * @version 0.0.1
+ * @since
+ */
+@RequiredArgsConstructor
+public enum ReporterType {
+
+  CITIZEN("Bürger"),
+  MUNICIPALITY("Kommune"),
+  INTERN("Intern"),
+  COMPANY("Firma"),
+  OTHER("Sonstige");
+
+  @Getter
+  private final String germanName;
+}

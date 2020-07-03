@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<list key="CommitDialog.authorValues">
+		<item value="fri &lt;fri@fri-VBox&gt;"/>
+	</list>
+	<list key="CommitDialog.committerValues">
+		<item value="fri &lt;fri@fri-VBox&gt;"/>
+	</list>
+	<section name="org.eclipse.egit.ui.internal.staging.StagingView">
+		<item key="HORIZONTAL_SASH_FORM_WEIGHT" value="500,500"/>
+		<item key="STAGING_SASH_FORM_WEIGHT" value="500,500"/>
+		<item key="sortItemState" value="false"/>
+	</section>
+	<section name="GitCommitMessageComponent">
+	</section>
+	<section name="org.eclipse.egit.ui.internal.push.PushResultDialog.dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="126"/>
+		<item key="DIALOG_Y_ORIGIN" value="79"/>
+		<item key="DIALOG_WIDTH" value="772"/>
+		<item key="DIALOG_HEIGHT" value="458"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
+		<list key="sashWeights">
+			<item value="600"/>
+			<item value="400"/>
+		</list>
+	</section>
+	<section name="org.eclipse.egit.ui.internal.pull.PullResultDialog.dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="746"/>
+		<item key="DIALOG_Y_ORIGIN" value="338"/>
+		<item key="DIALOG_WIDTH" value="887"/>
+		<item key="DIALOG_HEIGHT" value="412"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
+	</section>
+	<section name="org.eclipse.egit.ui.internal.dialogs.MergeTargetSelectionDialog.dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="621"/>
+		<item key="DIALOG_Y_ORIGIN" value="15"/>
+		<item key="DIALOG_WIDTH" value="613"/>
+		<item key="DIALOG_HEIGHT" value="683"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
+	</section>
+	<section name="org.eclipse.egit.ui.internal.merge.MergeResultDialog.dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="575"/>
+		<item key="DIALOG_Y_ORIGIN" value="335"/>
+		<item key="DIALOG_WIDTH" value="755"/>
+		<item key="DIALOG_HEIGHT" value="248"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
+	</section>
+	<section name="org.eclipse.egit.ui.internal.dialogs.CheckoutDialog.dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="621"/>
+		<item key="DIALOG_Y_ORIGIN" value="146"/>
+		<item key="DIALOG_WIDTH" value="613"/>
+		<item key="DIALOG_HEIGHT" value="487"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|11.0|0|GTK|1|"/>
+	</section>
+</section>

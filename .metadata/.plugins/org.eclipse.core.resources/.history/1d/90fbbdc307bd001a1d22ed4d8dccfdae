@@ -1,0 +1,12 @@
+package de.fri;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
+public class TO {
+  
+  private String name;
+  
+  private Integer age;
+
+}

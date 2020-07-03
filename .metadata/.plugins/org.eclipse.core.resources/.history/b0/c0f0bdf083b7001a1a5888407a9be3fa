@@ -1,0 +1,116 @@
+package de.netzebw.service;
+
+import static java.time.LocalDateTime.now;
+import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toSet;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.enterprise.context.ApplicationScoped;
+
+import de.netzebw.to.MessageTO;
+import de.netzebw.util.AbstractMessageService;
+import de.netzebw.util.to.Message;
+import de.netzebw.util.to.Reporter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.core.pagination.sync.SdkIterable;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
+/**
+ * The Class MessageSyncService.
+ *
+ * @author Jochen Mink, CGI
+ * @version 1.0.0
+ * @since
+ */
+@Slf4j
+@RequiredArgsConstructor
+@ApplicationScoped
+public class MessageSyncService extends AbstractMessageService {
+
+  // private static final Integer FUNCTIONAL_ID_LENGTH = 8;
+
+  private final DynamoDbClient dynamoDB;
+  private final IDService idService;
+
+  /**
+   * finds all {@link Message}s that are stored in the db.
+   * 
+   * @return the {@link Collection} of {@link Message}s.
+   */
+  public Collection<Message> findAll() {
+    return dynamoDB.scanPaginator(scanRequest()).items().stream()
+        .map(Message::fromMapToItem).filter(Objects::nonNull)
+        .collect(toSet());
+  }
+
+  /**
+   * adds a {@link Message} by converting it and saving it to the db.
+   * 
+   * @param messageTO
+   *                  the {@link Message}.
+   * @return the {@link Collection} of {@link Message}s after saving.
+   */
+  // public Collection<MessageTO> add(final MessageTO messageTO) {
+  public Collection<Message> add(final Message message) {
+    // final Message message = converter.convert(messageTO);
+
+    handleKeys(message);
+    handleKeys(message.getReporter());
+    final LocalDateTime now = now();
+    message.setCreatedTimestamp(Objects.toString(now));
+    message.setUpdatedTimestamp(Objects.toString(now));
+    log.info("try to put item funId{}" + message.getFunctionalId());
+    dynamoDB.putItem(buildPutRequest(Message.fromItemToMap(message)));
+    final Collection<Message> msg =  findAll();
+    log.info("add method find all {}", msg.toString());
+    return msg;
+  }
+
+  /**
+   * finds a {@link Message} by its uuid.
+   * 
+   * @param uuid
+   *             the uuid as {@link String} representation.
+   * @return the {@link Message} for the given uuid if present, else <code>null</code>.
+   */
+  public Message get(final String uuid) {
+    return Message.fromMapToItem(dynamoDB.getItem(buildGetRequest(uuid)).item());
+  }
+
+  /**
+   * finds a {@link MessageTO} by its functional id.
+   * 
+   * @param functionalId
+   *                     the functional id as {@link String} representation.
+   * @return the {@link MessageTO} for the given functional id if given and present, else the first item found in case no functional id was present,
+   *         else
+   *         <code>null</code> if there are no items at all.
+   */
+  public Message getByFunctionalId(final String functionalId) {
+    final SdkIterable<Map<String, AttributeValue>> scanItems = dynamoDB.scanPaginator(scanRequest(functionalId)).items();
+    return null == scanItems
+        ? null
+        : scanItems.stream().map(Message::fromMapToItem).filter(Objects::nonNull).findFirst().orElse(null);
+  }
+
+  private void handleKeys(final Message message) {
+    if (null == message) {
+      return;
+    }
+    message.setFunctionalId(idService.createId(getTableName()));
+  }
+
+  private void handleKeys(final Reporter reporter) {
+    if (null == reporter) {
+      return;
+    }
+    reporter.setRptUuid(randomUUID().toString());
+  }
+
+}

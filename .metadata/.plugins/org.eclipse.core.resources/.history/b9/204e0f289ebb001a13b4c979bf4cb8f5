@@ -1,0 +1,15 @@
+package de.netzebw.to;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class IncidentTO {
+  
+  @Schema(description = "name", required = false)
+  public String name;
+
+}
