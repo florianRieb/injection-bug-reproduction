@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Copy element &apos;ErrorTO.java&apos; to &apos;incident-api-service/src/main/java/de.netzebw.to&apos;&#x0A;- Original project: &apos;message-api-processing&apos;&#x0A;- Destination element: &apos;incident-api-service/src/main/java/de.netzebw.to&apos;&#x0A;- Original element: &apos;de.netzebw.to.ErrorTO.java&apos;" description="Copy compilation unit" destination="=incident-api-service/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;de.netzebw.to" element1="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;de.netzebw.to{ErrorTO.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1593609369832" units="1" version="1.0"/>
-</session>

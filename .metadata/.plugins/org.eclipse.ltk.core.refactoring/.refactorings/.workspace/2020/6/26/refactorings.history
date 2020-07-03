@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;message-processing-service&apos;" deleteContents="false" description="Delete resource &apos;message-processing-service&apos;" element1="/message-processing-service" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1593120751037"/>&#x0A;<refactoring comment="Delete resource &apos;message-sns-processing&apos;" deleteContents="false" description="Delete resource &apos;message-sns-processing&apos;" element1="/message-sns-processing" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1593120761963"/>
-</session>

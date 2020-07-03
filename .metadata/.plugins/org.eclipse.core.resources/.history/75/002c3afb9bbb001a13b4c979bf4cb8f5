@@ -1,6 +1,0 @@
-package de.netzebw.web;
-
-
-public interface IncidentResourceDocu {
-
-}
